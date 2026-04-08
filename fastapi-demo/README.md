@@ -13,9 +13,17 @@ source venv/Scripts/activate
 ### 3. Install Dependencies
 ```bash
 pip install -r requirements.txt
+
+playwright install chromium
 ```
 
 ### 4. Run project
 ```bash
-python main.py
+python agent.py
 ```
+
+### 5. Run fastapi
+```bash
+uvicorn main:app --reload
+```
+
