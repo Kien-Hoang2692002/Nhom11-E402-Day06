@@ -1,10 +1,8 @@
 from langchain_core.tools import tool
 import json
 import os
+import re
 
-# =========================
-# LOAD DATA JSON
-# =========================
 DATA_PATH = os.path.join(os.path.dirname(__file__), "vinfast_data.json")
 
 def load_data():
@@ -13,9 +11,6 @@ def load_data():
     return raw.get("du_lieu", [])
 
 def parse_price(price_str):
-    """
-    "302.000.000" -> 302000000
-    """
     if not price_str:
         return None
     try:
@@ -23,158 +18,132 @@ def parse_price(price_str):
     except:
         return None
 
-
 def normalize_data():
     data = load_data()
     cars = []
-
     for item in data:
         price = parse_price(item.get("gia"))
-
         cars.append({
+            "id": item.get("id", item.get("ten_xe").lower().replace(" ", "")),
             "name": item.get("ten_xe"),
             "type": item.get("loai_xe"),
             "price": price,
             "range": item.get("quang_duong"),
             "desc": item.get("mo_ta"),
             "seats": item.get("thong_so", {}).get("Số chỗ ngồi"),
-            "raw": item
+            "img": item.get("hinh_anh", [""])[0] if item.get("hinh_anh") else ""
         })
-
     return cars
 
-
-# =========================
-# HELPER
-# =========================
 def format_currency(amount: int) -> str:
     if not amount:
         return "N/A"
     return f"{amount:,.0f}".replace(",", ".") + "đ"
 
-def normalize_name(name: str) -> str:
-    return name.lower().replace(" ", "").strip()
-
-# =========================
-# TOOL 1: TÌM XE THEO GIÁ
-# =========================
 @tool
-def search_cars_by_price(max_price: int) -> str:
+def analyze_user_budget(text: str) -> dict:
     """
-    Tìm xe VinFast theo ngân sách tối đa.
+    Phân tích ngân sách và độ rõ ràng của ngân sách từ câu nói của người dùng.
+    Trả về: {"budget_amount": <số tiền nguyên dương> hoặc None, "is_clear": <True nếu text có chữ thuế/pin/lăn bánh/đã gồm>}
+    """
+    lower_text = text.lower()
+    matches = re.findall(r'\d+', lower_text)
+    budget = None
+    
+    if matches:
+        num = int(matches[0])
+        if 'triệu' in lower_text or 'tr' in lower_text:
+            num *= 1000000
+        elif 'tỷ' in lower_text:
+            num *= 1000000000
+        elif num < 10000:
+            num *= 1000000
+        budget = num
+
+    is_clear = False
+    if budget:
+        if any(w in lower_text for w in ['thuế', 'lăn bánh', 'pin', 'đã gồm', 'trọn gói', 'chưa bao gồm', 'rồi']):
+            is_clear = True
+        if budget >= 1000000000:
+            is_clear = True
+            
+    return {"budget_amount": budget, "is_clear": is_clear}
+
+@tool
+def execute_matching_logic(budget: int, preference: str = None) -> dict:
+    """
+    Tìm khớp xe dựa vào data động theo kịch bản Flowchart.
+    - budget: Ngân sách đã được làm rõ.
+    - preference: ưu tiên thiết kế ("rong_rai" hoặc "hieu_nang"). Có thể để None nếu chưa hỏi.
+    Trả về dict mô tả hành động kế tiếp cần AI làm, cùng mảng list xe gợi ý (ID, name, price, desc, img).
     """
     cars = normalize_data()
+    oto_cars = [c for c in cars if c["type"] == "oto_dien" and c["price"]]
+    
+    if not oto_cars:
+        return {"action": "NO_CAR_FOUND", "cars": []}
+    
+    oto_cars.sort(key=lambda x: x["price"])
+    min_price = oto_cars[0]["price"]
 
-    results = [c for c in cars if c["price"] and c["price"] <= max_price]
+    # TH1: Khách không đủ tiền mua chiếc rẻ nhất -> Vượt ngân sách
+    if budget < min_price:
+        return {
+            "action": "PROPOSE_INSTALLMENT", 
+            "message": f"Ngân sách {format_currency(budget)} thấp hơn mức xe rẻ nhất của chúng tôi là {format_currency(min_price)}.",
+            "cars": []
+        }
 
-    if not results:
-        return "Không tìm thấy xe phù hợp với ngân sách."
-
-    results.sort(key=lambda x: x["price"])
-
-    lines = [f"Xe dưới {format_currency(max_price)}:"]
-    for c in results:
-        lines.append(f"- {c['name']}: {format_currency(c['price'])}")
-
-    return "\n".join(lines)
-
-
-# =========================
-# TOOL 2: TÌM THEO LOẠI
-# =========================
-@tool
-def search_by_type(car_type: str) -> str:
-    """
-    Tìm xe theo loại: oto_dien hoặc xe_may_dien
-    """
-    cars = normalize_data()
-
-    results = [c for c in cars if c["type"] == car_type]
-
-    if not results:
-        return f"Không có xe loại {car_type}"
-
-    lines = [f"Danh sách {car_type}:"]
-    for c in results:
-        lines.append(f"- {c['name']} ({format_currency(c['price'])})")
-
-    return "\n".join(lines)
-
-
-# =========================
-# TOOL 3: RECOMMEND XE
-# =========================
-@tool
-def recommend_car(budget: int, purpose: str) -> str:
-    """
-    Gợi ý xe dựa trên ngân sách và mục đích.
-    purpose: di_pho | gia_dinh | dich_vu | hoc_sinh
-    """
-    cars = normalize_data()
-
-    candidates = [c for c in cars if c["price"] and c["price"] <= budget]
-
+    # TH2: Borderline - Check các lựa chọn quanh budget ±15%
+    margin = budget * 0.15
+    candidates = [c for c in oto_cars if budget - margin <= c["price"] <= budget + margin]
+    
+    # Nếu không có xe nào nằm trong margin, lấy xe tốt nhất vừa khít budget
     if not candidates:
-        return "Không có xe phù hợp ngân sách."
+        affordable = [c for c in oto_cars if c["price"] <= budget]
+        if affordable:
+            candidates = [affordable[-1]]
 
-    # Logic gợi ý
-    if purpose == "di_pho":
-        best = min(candidates, key=lambda x: x["price"])
-    elif purpose == "gia_dinh":
-        best = max(candidates, key=lambda x: int(x["seats"].split()[0]) if x["seats"] else 4)
-    elif purpose == "dich_vu":
-        best = max(candidates, key=lambda x: int(x["range"].split()[0]) if x["range"] else 0)
+    # Borderline rule: Nếu có >= 2 xe và khách chưa chọn preference -> Chuyển luồng hỏi
+    if len(candidates) >= 2 and not preference:
+        car_names = ", ".join(c["name"] for c in candidates)
+        return {
+            "action": "ASK_PREFERENCE",
+            "message": f"Hệ thống tìm thấy nhiều lựa chọn trong tầm giá ({car_names}). Trả về yêu cầu LLM hỏi khách hàng thích xe Rộng rãi hay Hiệu năng cao.",
+            "cars": []
+        }
+    
+    # TH3: Có xe khớp tuyệt đối (1 xe) HOẶC user đã có preference
+    if len(candidates) >= 2 and preference:
+        # Giả lập logic soft-sort:
+        if preference == "rong_rai":
+            candidates.sort(key=lambda x: x["price"], reverse=True)
+        else:
+            candidates.sort(key=lambda x: x["price"])
+        best_match = candidates[0]
     else:
-        best = candidates[0]
+        best_match = candidates[0] if candidates else None
+        
+    if best_match:
+        # Format JSON dict directly
+        return {
+            "action": "RECOMMEND_CARD",
+            "message": f"Trả về xe phù hợp nhất.",
+            "cars": [{
+                "id": best_match["id"],
+                "name": best_match["name"],
+                "price": format_currency(best_match["price"]),
+                "desc": best_match["desc"],
+                "specs": f"Số chỗ: {best_match['seats']} | Tầm hoạt động: {best_match['range']}"
+            }]
+        }
+    
+    return {"action": "NO_CAR_FOUND", "cars": []}
 
-    return (
-        f"Gợi ý cho bạn:\n"
-        f"- {best['name']}\n"
-        f"Giá: {format_currency(best['price'])}\n"
-        f"Mô tả: {best['desc']}"
-    )
-
-
-# =========================
-# TOOL 4: SO SÁNH XE
-# =========================
 @tool
-def compare_cars(car1: str, car2: str) -> str:
+def log_user_preference(car_id: str, is_skipped: bool) -> str:
     """
-    So sánh 2 mẫu xe VinFast theo tên.
-    Ví dụ: VF6, VF 6, vf6 đều hợp lệ
+    Lưu log lên Database mỗi khi người dùng có hành động Skip thẻ hoặc quan tâm vào thẻ.
     """
-    data = load_data()
-
-    norm_car1 = normalize_name(car1)
-    norm_car2 = normalize_name(car2)
-
-    car_obj1 = None
-    car_obj2 = None
-
-    for car in data:
-        name_norm = normalize_name(car["ten_xe"])
-
-        if name_norm == norm_car1:
-            car_obj1 = car
-        if name_norm == norm_car2:
-            car_obj2 = car
-
-    if not car_obj1 or not car_obj2:
-        return f"Không tìm thấy thông tin để so sánh {car1} và {car2}."
-
-    def get_info(car):
-        return (
-            f"🚗 {car['ten_xe']}\n"
-            f"💰 Giá: {car.get('gia', 'N/A')}\n"
-            f"🔋 Quãng đường: {car.get('quang_duong', 'N/A')}\n"
-            f"🪑 Số chỗ: {car.get('thong_so', {}).get('Số chỗ ngồi', 'N/A')}\n"
-        )
-
-    result = (
-        "=== So sánh xe ===\n\n"
-        f"{get_info(car_obj1)}\n"
-        f"{get_info(car_obj2)}"
-    )
-
-    return result
+    status = "Skipped" if is_skipped else "Interested"
+    return f"[SYSTEM LOG] Đã ghi nhận mô hình AI: User {status} đối với xe {car_id}. Sẽ cải thiện Recommendation Lần sau!"
