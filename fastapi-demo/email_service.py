@@ -1,7 +1,10 @@
+import base64
+import io
 import os
 import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
+from tools import create_vietqr_payment
 
 load_dotenv()
 
@@ -52,6 +55,23 @@ def send_quotation_email(to_email: str, car_name: str, car_price_str: str):
     if not fees:
         fees = {"base": car_price_str, "vat": "N/A", "plate": "N/A", "reg": "N/A", "total": "Liên hệ trực tiếp"}
 
+    clean_str = ''.join(filter(str.isdigit, car_price_str))
+    base_price = int(clean_str)
+    amount = int(base_price * 0.1)
+    content = f"{to_email}_{car_name}"
+
+    qr_data = create_vietqr_payment(amount, content)
+
+    if not qr_data:
+        return "❌ Không tạo được QR thanh toán"
+    
+    qr_base64 = qr_data['qr_code']
+    if "," in qr_base64:
+        qr_base64 = qr_base64.split(",")[1]
+    
+    qr_bytes = base64.b64decode(qr_base64)
+    qr_buffer = io.BytesIO(qr_bytes)
+
     html_content = f"""
     <html>
     <head>
@@ -100,7 +120,17 @@ def send_quotation_email(to_email: str, car_name: str, car_price_str: str):
             </table>
 
             <p style="margin-top: 20px;"><em>Lưu ý: Bảng giá này là nguyên mẫu giả lập sinh tự động và chỉ mang tính tham khảo. Chuyên viên kinh doanh VinFast sẽ liên hệ lại qua email để cung cấp thông tin chính xác nhất.</em></p>
-            
+                    
+            <p>Quét QR bên dưới:</p>
+            <img src="cid:qrcode" width="250" style="display:block;"/>
+
+            <p>Hoặc chuyển khoản thủ công:</p>
+            <ul>
+                <li>Ngân hàng: MB Bank</li>
+                <li>Số TK: 9704220000000000</li>
+                <li>Nội dung: {content}</li>
+            </ul>
+
             <div class="footer">
                 <p>Hệ thống AI Tư vấn - VinFast Prototype Demo</p>
             </div>
@@ -115,6 +145,15 @@ def send_quotation_email(to_email: str, car_name: str, car_price_str: str):
     msg['To'] = to_email
     msg.set_content("Quý khách vui lòng mở email hỗ trợ đọc HTML để xem bảng báo giá.")
     msg.add_alternative(html_content, subtype='html')
+    if qr_buffer:
+        qr_buffer.seek(0)
+        html_part = msg.get_payload()[1] 
+        html_part.add_related(
+            qr_buffer.read(),
+            maintype='image',
+            subtype='png',
+            cid='qrcode'
+        )
 
     try:
         # Dùng SSL (cổng 465)

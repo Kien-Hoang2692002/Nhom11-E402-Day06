@@ -13,6 +13,7 @@ from tools import (
     search_by_type,
     recommend_car,
     compare_cars,
+    place_order_and_notify,
     get_car_details,
     search_vinfast_live
 )
@@ -41,6 +42,7 @@ tools_list = [
     search_by_type,
     recommend_car,
     compare_cars,
+    place_order_and_notify,
     get_car_details,
     search_vinfast_live
 ]
