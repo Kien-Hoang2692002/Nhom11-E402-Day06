@@ -8,7 +8,13 @@ from langchain_core.messages import SystemMessage
 from tools import (
     analyze_user_budget,
     execute_matching_logic,
-    log_user_preference
+    log_user_preference,
+    search_cars_by_price,
+    search_by_type,
+    recommend_car,
+    compare_cars,
+    get_car_details,
+    search_vinfast_live
 )
 from dotenv import load_dotenv
 
@@ -26,9 +32,17 @@ class AgentState(TypedDict):
 
 # 3. LLM + Tools
 tools_list = [
+
     analyze_user_budget,
     execute_matching_logic,
-    log_user_preference
+    log_user_preference,
+
+    search_cars_by_price,
+    search_by_type,
+    recommend_car,
+    compare_cars,
+    get_car_details,
+    search_vinfast_live
 ]
 
 llm = ChatOpenAI(model="gpt-4o-mini")
