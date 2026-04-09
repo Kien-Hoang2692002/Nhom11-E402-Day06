@@ -1,7 +1,10 @@
 import os
 import asyncio
+import re
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
 # Import graph agent bạn đã build
@@ -12,113 +15,139 @@ load_dotenv()
 API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Khởi tạo Bot và Dispatcher đúng chuẩn 3.x
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 dp = Dispatcher()
 
 # Memory đơn giản theo user
 user_sessions = {}
 
 # =========================
-# START (Sửa syntax Command)
+# HELPER: Phân tích tin nhắn để rút trích ảnh
+# =========================
+def extract_images(text: str):
+    """
+    Rút trích các thẻ [IMAGE] url hoặc các link ảnh markdown và trả về text sạch + list urls.
+    """
+    # 1. Tìm thẻ [IMAGE] URL
+    pattern_tag = r"(?i)\[IMAGE\]\s*(https?://[^\s\n\]\)]+)"
+    urls_tag = re.findall(pattern_tag, text)
+    
+    # 2. Tìm link markdown ![alt](url) hoặc [alt](url) có đuôi là ảnh
+    pattern_md = r"!?\[.*?\]\((https?://.*?\.(?:jpg|jpeg|png|webp|gif|bmp).*?)\)"
+    urls_md = re.findall(pattern_md, text)
+    
+    # Gộp lại và lấy unique
+    all_urls = list(dict.fromkeys(urls_tag + urls_md))
+    
+    # Xoá các thẻ và link khỏi văn bản
+    clean_text = re.sub(pattern_tag, "", text)
+    clean_text = re.sub(pattern_md, "", clean_text).strip()
+    
+    # Xoá cả những URL trần còn sót lại nếu chúng là ảnh
+    for url in all_urls:
+        clean_text = clean_text.replace(url, "").strip()
+        
+    return clean_text, all_urls
+
+from aiogram.utils.media_group import MediaGroupBuilder
+
+async def send_smart_response(message: types.Message, text: str):
+    """
+    Gửi tin nhắn thông minh: Hiển thị 1 ảnh đại diện kèm Caption
+    """
+    clean_text, urls = extract_images(text)
+    
+    # Vô hiệu hóa xem trước liên kết (link trần)
+    link_preview = types.LinkPreviewOptions(is_disabled=True)
+    
+    if not urls:
+        if clean_text:
+            await message.answer(clean_text, link_preview_options=link_preview)
+        return
+
+    # Lấy ảnh đầu tiên làm ảnh chính
+    main_image = urls[0]
+    
+    # Telegram giới hạn caption là 1024 ký tự
+    if len(clean_text) < 1000:
+        try:
+            await message.answer_photo(
+                photo=main_image, 
+                caption=clean_text,
+                link_preview_options=link_preview
+            )
+            # Nếu còn ảnh khác, gửi album (tối đa thêm 9 tấm)
+            if len(urls) > 1:
+                media_group = MediaGroupBuilder()
+                for url in urls[1:10]:
+                    media_group.add_photo(media=url)
+                await message.answer_media_group(media=media_group.build())
+        except Exception as e:
+            # Fallback
+            await message.answer(clean_text, link_preview_options=link_preview)
+            for url in urls[:3]:
+                try: await message.answer_photo(photo=url)
+                except: pass
+    else:
+        # Nếu text quá dài, gửi riêng
+        await message.answer(clean_text, link_preview_options=link_preview)
+        media_group = MediaGroupBuilder()
+        for url in urls[:10]:
+            media_group.add_photo(media=url)
+        try:
+            if len(urls) > 1:
+                await message.answer_media_group(media=media_group.build())
+            else:
+                await message.answer_photo(photo=main_image)
+        except:
+            pass
+
+# =========================
+# START
 # =========================
 @dp.message(Command("start"))
 async def welcome(message: types.Message):
     await message.reply(
-        "🚗 Xin chào! Tôi là VinFast Advisor\n\n"
-        "Bạn có thể hỏi:\n"
-        "- Tôi có 500 triệu nên mua xe gì?\n"
-        "- So sánh VF6 và VF8\n"
-        "- Xe máy điện nào rẻ nhất?"
+        "🚗 VinFast Advisor xin chào!\n"
+        "Tôi sẽ hiển thị hình ảnh xe trực tiếp cho bạn."
     )
 
 # =========================
-# HANDLE MESSAGE (Sửa syntax handler)
+# HANDLE MESSAGE
 # =========================
 @dp.message()
 async def handle_message(message: types.Message):
     user_id = message.from_user.id
     user_input = message.text
 
-    # Lấy lịch sử chat (memory)
+    if not user_input: return
+
     if user_id not in user_sessions:
         user_sessions[user_id] = []
 
     user_sessions[user_id].append(("human", user_input))
-
-    # Trong aiogram 3, message.answer trả về message object, ta có thể dùng để xóa/edit sau này
-    await message.answer("🤖 Đang tư vấn cho bạn...")
-
-    # Gọi AI Agent
-    try:
-        result = graph.invoke({
-            "messages": user_sessions[user_id]
-        })
-
-        # Lấy nội dung tin nhắn cuối cùng từ Agent
-        final_msg = result["messages"][-1].content
-
-        # Lưu lại response vào bộ nhớ
-        user_sessions[user_id].append(("ai", final_msg))
-
-        # Gửi phản hồi cuối cùng
-        await message.answer(final_msg)
-        
-    except Exception as e:
-        await message.answer(f"❌ Có lỗi xảy ra: {str(e)}")
-
-# TASK: start - Bắt đầu tư vấn xe
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    await message.answer(
-        "🚗 Chào mừng bạn đến với VinFast Advisor!\n"
-        "Tôi có thể giúp bạn chọn xe, tra giá hoặc giải đáp kỹ thuật.\n"
-        "Dùng /tu_van để bắt đầu hỏi đáp AI."
-    )
-
-# TASK: gia_xe - Sử dụng Agent để lấy bảng giá mới nhất
-@dp.message(Command("gia_xe"))
-async def cmd_gia_xe(message: types.Message):
-    # 1. Gửi thông báo chờ để User không cảm thấy bot bị treo
-    waiting_msg = await message.answer("📊 Đang truy xuất bảng giá mới nhất từ hệ thống...")
+    waiting_msg = await message.answer("🤖 Đang lấy hình ảnh cho bạn...")
 
     try:
-        result = graph.invoke({
-            "messages": [("human", "Hãy tổng hợp bảng giá các dòng xe VinFast hiện tại (VF5, VF6, VF7, VF8, VF9, VFe34)")]
-        })
+        result = graph.invoke({"messages": user_sessions[user_id]})
+        response_text = result["messages"][-1].content
+        
+        # Lưu vào history (không lưu tag ảnh)
+        clean_msg, _ = extract_images(response_text)
+        user_sessions[user_id].append(("ai", clean_msg))
 
-        final_answer = result["messages"][-1].content
-        await message.answer(final_answer, parse_mode="Markdown")
+        await send_smart_response(message, response_text)
         
     except Exception as e:
-        await message.answer(f"❌ Lỗi khi lấy bảng giá từ AI: {str(e)}")
+        await message.answer(f"❌ Lỗi: {str(e)}")
     finally:
-        await waiting_msg.delete()
+        try: await waiting_msg.delete()
+        except: pass
 
-# TASK: tu_van - Chat với AI
-@dp.message(Command("tu_van"))
-async def cmd_tu_van(message: types.Message):
-    await message.answer("🤖 Chế độ tư vấn AI đã sẵn sàng. Bạn hãy đặt câu hỏi về dòng xe bạn quan tâm nhé!")
-
-# TASK: update - Cập nhật dữ liệu (Admin)
-@dp.message(Command("update"))
-async def cmd_update(message: types.Message):
-    # Kiểm tra nếu đúng là ID của bạn (Admin) mới cho chạy
-    # if message.from_user.id == YOUR_ADMIN_ID:
-    await message.answer("🔄 Đang tiến hành cập nhật dữ liệu mới nhất từ hệ thống...")
-    # Gọi hàm crawl data ở đây
-    from calldata import main as crawl_main
-    asyncio.create_task(crawl_main())
-
-# =========================
-# RUN BOT
-# =========================
 async def main():
-    # Xóa webhook cũ nếu có để tránh xung đột
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Bot stopped!")
+    try: asyncio.run(main())
+    except KeyboardInterrupt: print("Bot stopped!")
