@@ -8,15 +8,17 @@
       "url": "https://shop.vinfastauto.com/vn_vi/dat-coc-xe-dien-vf3.html",
       "thoi_gian": "2026-04-09T11:36:13.998366",
       "gia": "302.000.000",
-      "quang_duong": null,
+      "quang_duong": "215 km/1 lần sạc",
       "mo_ta": "Tùy chọn cho ngân sách của bạn. VinFast VF 3 - Xe nhỏ, giá trị lớn.",
       "thong_so": {
         "Số chỗ ngồi": "4 chỗ"
       },
       "mau_sac": [
-        "xanh toàn",
-        "xanh và",
-        "cam kết"
+        "vàng",
+        "xanh",
+        "đỏ",
+        "trắng",
+        "xám"
       ],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw8a67356f/reserves/VF3/VF3_Rear%2034_Driver_Side_Wheel_Cover1.png",
@@ -36,13 +38,18 @@
       "url": "https://shop.vinfastauto.com/vn_vi/dat-coc-xe-dien-vf5.html",
       "thoi_gian": "2026-04-09T11:36:27.263754",
       "gia": "529.000.000",
-      "quang_duong": null,
+      "quang_duong": "326.4 km/ 1 lần sạc",
       "mo_ta": "Phong cách trẻ trung, năng động, cá tính. Không gian rộng rãi, phối màu sành điệu, cuốn hút với các đường viền bắt mắt.",
       "thong_so": {
         "Pin": "37,23 kWh",
         "Bảo hành": "7 năm"
       },
-      "mau_sac": [],
+      "mau_sac": [
+        "xám",
+        "trắng",
+        "đỏ",
+        "vàng"
+      ],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw948beff6/reserves/VF5/2025/xe.webp",
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw3c06de46/reserves/VF5/2025/naturel.webp",
@@ -66,7 +73,11 @@
       "thong_so": {
         "Quãng đường": "485 km"
       },
-      "mau_sac": [],
+      "mau_sac": [
+        "đỏ",
+        "trắng",
+        "xám"
+      ],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw1eceafe6/reserves/VF6/2026/VF6-Lifestyle-13.webp",
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw8ee0628c/reserves/VF6/2026/VF6-Lifestyle-12.webp",
@@ -110,14 +121,14 @@
       "url": "https://shop.vinfastauto.com/vn_vi/dat-coc-xe-dien-vf7.html",
       "thoi_gian": "2026-04-09T11:36:56.053027",
       "gia": "789.000.000",
-      "quang_duong": null,
+      "quang_duong": "440 km",
       "mo_ta": "*Hình ảnh mang tính minh họa, sử dụng hình ảnh của sản phẩm trong giai đoạn tiền thương mại. Các thông tin sản phẩm có thể thay đổi mà không cần báo trước.",
       "thong_so": {
         "Bảo hành": "10 năm"
       },
       "mau_sac": [
-        "cam kết",
-        "xanh và"
+        "trắng",
+        "đỏ"
       ],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dwb2073c10/reserves/VF7/vf7-lead-banner.webp",
@@ -136,7 +147,7 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/dat-coc-xe-vf8.html",
       "thoi_gian": "2026-04-09T11:37:04.796736",
-      "gia": "019.000.000",
+      "gia": "1.019.000.000",
       "quang_duong": "562 km",
       "mo_ta": "VF 8 Eco và VF 8 Plus đem đến đa dạng sự lựa chọn màu ngoại thất, phù hợp cho những chủ nhân yêu thích sự hiện đại, phong cách và sang trọng. Giảm lực cản không khí và tăng hiệu quả vận hành, đồng thời mang lại vẻ ngoài hiện đại và mạnh mẽ.",
       "thong_so": {
@@ -144,7 +155,7 @@
         "Tốc độ tối đa": "100 km/h"
       },
       "mau_sac": [
-        "cam kết"
+        "đỏ", "trắng"
       ],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dwe66f6107/reserves/VF8/trolai.webp",
@@ -163,13 +174,13 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/dat-coc-xe-vf9.html",
       "thoi_gian": "2026-04-09T11:37:13.766014",
-      "gia": "50.000.000",
-      "quang_duong": null,
+      "gia": "1.499.000.000 ",
+      "quang_duong": "626 km",
       "mo_ta": "Sự Lựa Chọn Của Người Thành Đạt, Tiên Phong Quãng đường di chuyển/lần sạc đầy",
       "thong_so": {
         "Số chỗ ngồi": "7 chỗ"
       },
-      "mau_sac": [],
+      "mau_sac": ["xám", "đỏ", "trắng"],
       "hinh_anh": [
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dwbbed81f4/images/PDP/vf9/202406/cs-battery-lease-solution.webp",
         "https://shop.vinfastauto.com/on/demandware.static/-/Sites-app_vinfast_vn-Library/default/dw8c6a1e85/images/PDP/vf9/202406/cs-home-charger.webp",
@@ -187,7 +198,7 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/o-to-vinfast-lux-a.html",
       "thoi_gian": "2026-04-09T11:37:24.053369",
-      "gia": null,
+      "gia": "1.074.000.000",
       "quang_duong": null,
       "mo_ta": "Sự kết hợp giữa dáng vẻ khỏe khoắn và cấu trúc hoàn hảo của ngoại thất tạo nên điểm nhấn sang trọng nhưng vẫn đầy tinh tế cho LUX A2.0, thổi làn gió mới vào thiết kế đặc hữu của dòng sedan thông thường. Được cấu thành từ nhôm, gỗ và da Nappa thượng hạng, khoang xe tạo cảm giác cao cấp và trang nhã.",
       "thong_so": {},
@@ -231,7 +242,7 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/o-to-vinfast-lux-sa.html",
       "thoi_gian": "2026-04-09T11:37:47.937135",
-      "gia": null,
+      "gia": "1.126.000.000",
       "quang_duong": null,
       "mo_ta": "Đột phá trong từng đường nét thiết kế, đón đầu xu hướng thời thượng nhưng vẫn mang đậm bản sắc Việt, LUX SA2.0 hứa hẹn trở thành một hiện tượng mới trên đường phố, chinh phục mọi ánh nhìn. Thiết kế vô lăng hài hòa được bọc da sang trọng cho cảm giác lái chân thực trên mọi cung đường.",
       "thong_so": {},
@@ -253,7 +264,7 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/o-to-vinfast-president.html",
       "thoi_gian": "2026-04-09T11:37:58.525138",
-      "gia": null,
+      "gia": "4.600.000.000",
       "quang_duong": null,
       "mo_ta": "President là chiếc SUV bề thế với thiết kế sang trọng cùng những đường gân dập nổi, lưới tản nhiệt hình kim cương ấn tượng và 18 lựa chọn màu sơn độc đáo để khẳng định khí chất riêng biệt của chủ nhân. President sử dụng chất liệu da Nappa cao cấp từ Eagle Ottawa cùng gỗ ốp Veneer thượng hạng đến từ Italy.",
       "thong_so": {
@@ -283,8 +294,10 @@
       "mo_ta": "Vận hành đơn giản, tối ưu phù hợp cho những người mới sử dụng EV. Từ người mới lái xe hay người lớn trung niên, không giới hạn độ tuổi.",
       "thong_so": {},
       "mau_sac": [
-        "cam kết",
-        "xanh và"
+        "vàng",
+        "xanh",
+        "trắng",
+        "xám"
       ],
       "hinh_anh": [
         "https://static-cms-prod.vinfastauto.com/vf-mpv-7_hover.png",
@@ -303,7 +316,7 @@
       "loai_xe": "oto_dien",
       "url": "https://vinfastauto.com/vn_vi/herio-green",
       "thoi_gian": "2026-04-09T11:38:17.555438",
-      "gia": null,
+      "gia": "499.000.000",
       "quang_duong": "326 km",
       "mo_ta": "Định nghĩa lại trải nghiệm xe dịch vụ thời đại xanh. Herio Green sở hữu thiết kế hiện đại, trẻ trung, cá tính và nổi bật với các lựa chọn phối màu nội ngoại thất, đảm bảo cá nhân hóa theo phong cách sống, cá tính và sở thích của mỗi khách hàng.",
       "thong_so": {
@@ -330,8 +343,8 @@
       "loai_xe": "oto_dien",
       "url": "https://shop.vinfastauto.com/vn_vi/nerio-green.html",
       "thoi_gian": "2026-04-09T11:38:25.984105",
-      "gia": null,
-      "quang_duong": null,
+      "gia":  "668.000.000",
+      "quang_duong": "318,6 km",
       "mo_ta": null,
       "thong_so": {},
       "mau_sac": [],
@@ -352,7 +365,7 @@
         "Số chỗ ngồi": "7 chỗ"
       },
       "mau_sac": [
-        "xanh\nvận"
+        "xanh", "Đỏ", "Đen"
       ],
       "hinh_anh": [
         "https://static-cms-prod.vinfastauto.com/vf-mpv-7_hover.png",
