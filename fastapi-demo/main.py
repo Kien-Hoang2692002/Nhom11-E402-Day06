@@ -4,6 +4,10 @@ from fastapi import FastAPI
 from bot_telegram import dp, bot
 from agent import graph
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # =========================
 # LIFESPAN (Quản lý khởi tạo và đóng bot)
 # =========================
@@ -22,6 +26,24 @@ async def lifespan(app: FastAPI):
     print("🛑 Shutting down Bot...")
     bot_task.cancel()  # Dừng polling
     await bot.session.close() # Đóng kết nối bot an toàn
+
+def send_telegram_notification(message: str):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+    
+    try:
+        response = requests.post(url, json=payload)
+        return response.json()
+    except Exception as e:
+        print(f"❌ Lỗi gửi Telegram: {e}")
+        return None
 
 app = FastAPI(lifespan=lifespan)
 
@@ -66,3 +88,50 @@ async def crawl_data():
         return {"message": "🚀 Đang crawl dữ liệu dưới nền (background)"}
     except Exception as e:
         return {"error": str(e)}
+    
+@app.get("/vnpay-return")
+async def vnpay_return(request: Request):
+    params = dict(request.query_params)
+
+    if params.get("vnp_ResponseCode") == "00":
+        # Thanh toán thành công
+        print("✅ Thanh toán thành công")
+
+        # Gửi Telegram
+        await bot.send_message(
+            chat_id=CHAT_ID,
+            text="🎉 Thanh toán thành công! Xe của bạn đang được xử lý."
+        )
+
+        return {"message": "Success"}
+
+    return {"message": "Failed"}
+
+@app.post("/webhook/vietqr")
+async def vietqr_callback(request: Request):
+    data = await request.json()
+    
+    # Giả lập dữ liệu VietQR gửi về
+    # data = {"amount": 10000000, "content": "VINFAST123", "status": "SUCCESS"}
+    
+    status = data.get("status")
+    amount = data.get("amount")
+    content = data.get("content")
+
+    if status == "SUCCESS":
+        # 1. Tạo nội dung tin nhắn thật kêu
+        msg = (
+            f"<b>💰 TING TING! NHẬN TIỀN CỌC MỚI</b>\n"
+            f"--------------------------\n"
+            f"👤 Khách hàng: Kiên\n"
+            f"💵 Số tiền: {amount:,.0f} VNĐ\n"
+            f"📝 Nội dung: {content}\n"
+            f"✅ <b>Trạng thái: Thành công</b>"
+        )
+        
+        # 2. Gửi ngay cho chính mình
+        send_telegram_notification(msg)
+        
+        return {"code": "00", "message": "Done"}
+    
+    return {"code": "01", "message": "Fail"}

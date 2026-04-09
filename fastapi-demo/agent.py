@@ -9,7 +9,8 @@ from tools import (
     search_cars_by_price,
     search_by_type,
     recommend_car,
-    compare_cars
+    compare_cars,
+    place_order_and_notify
 )
 from dotenv import load_dotenv
 
@@ -30,7 +31,8 @@ tools_list = [
     search_cars_by_price,
     search_by_type,
     recommend_car,
-    compare_cars
+    compare_cars,
+    place_order_and_notify
 ]
 
 llm = ChatOpenAI(model="gpt-4o-mini")
