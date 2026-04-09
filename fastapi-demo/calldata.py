@@ -225,15 +225,51 @@ async def scrape_one(page, ten_xe: str, url: str, loai: str) -> dict:
     extracted = extract(text)
     result.update(extracted)
 
-    # Lấy ảnh
+    # Lấy ảnh thông minh
     try:
+        # Truyền ten_xe vào Evaluate để lọc ảnh chính xác hơn
         imgs = await page.evaluate("""
-            () => Array.from(document.images)
-                .map(i => i.src)
-                .filter(s => s.startsWith('http') && !s.includes('data:'))
-                .filter(s => s.includes('vinfast') || s.includes('vf'))
-                .slice(0, 5)
-        """)
+            (carName) => {
+                const results = [];
+                const name = carName.toLowerCase().replace(/\s/g, '');
+                
+                const allImgs = Array.from(document.images).map(i => ({
+                    src: i.src,
+                    alt: i.alt.toLowerCase(),
+                    width: i.naturalWidth,
+                    height: i.naturalHeight
+                }));
+                
+                const prioritized = [];
+                const others = [];
+                
+                for (const img of allImgs) {
+                    const src = img.src;
+                    if (!src.startsWith('http') || src.includes('data:')) continue;
+                    
+                    const s = src.toLowerCase();
+                    const alt = img.alt.toLowerCase();
+                    
+                    // Bỏ qua rác: logo, icon, header, menu, footer, svg
+                    if (s.includes('logo') || s.includes('icon') || s.includes('header') || 
+                        s.includes('menu') || s.includes('footer') || s.includes('.svg')) continue;
+                    
+                    // Ưu tiên 1: Chứa từ khóa ngoại thất quan trọng + tên xe
+                    const isExterior = s.includes('banner') || s.includes('lead') || s.includes('hero') || 
+                                     s.includes('main') || s.includes('exterior') || s.includes('overview');
+                                     
+                    if (isExterior && (s.includes(name) || alt.includes(name))) {
+                        prioritized.unshift(src); // Đưa lên hàng đầu tuyệt đối
+                    } else if (s.includes(name) || alt.includes(name)) {
+                        prioritized.push(src); // Ưu tiên loại 2
+                    } else if (s.includes('vinfast') || s.includes('vf')) {
+                        others.push(src);
+                    }
+                }
+                // Trả về list unique, prioritized trước
+                return [...new Set([...prioritized, ...others])].slice(0, 12);
+            }
+        """, ten_xe)
         result["hinh_anh"] = imgs
     except:
         pass

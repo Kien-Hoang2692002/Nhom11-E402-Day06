@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat UI - VinFast Advisor Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            background: #d4d9de;
+        }
+
+        .app {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 60px;
+            background: #2a2f32;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile {
+            margin: 20px 0;
+            background: #1e88e5;
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .menu .icon {
+            margin: 15px 0;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        /* Chat list */
+        .chat-list {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #ddd;
+        }
+
+        .chat-list-header {
+            padding: 20px;
+            background: #eeeeee;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .chat-item {
+            display: flex;
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-item.active {
+            background: #e9ecef;
+        }
+
+        .avatar {
+            background: #1e88e5;
+            color: white;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .avatar.bot-ava {
+            background: #00a884;
+        }
+
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .last-msg {
+            color: #777;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chat window */
+        .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #efeae2;
+        }
+
+        .header {
+            padding: 15px 20px;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header .avatar {
+            margin-right: 15px;
+        }
+
+        .header .status {
+            font-size: 13px;
+            color: #4caf50;
+        }
+
+        /* Messages */
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .msg-wrapper {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .msg-wrapper.user {
+            justify-content: flex-end;
+        }
+
+        .msg {
+            max-width: 65%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.4;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .msg.bot {
+            background: white;
+            border-top-left-radius: 0;
+        }
+
+        .msg.user {
+            background: #dcf8c6;
+            border-top-right-radius: 0;
+        }
+
+        /* Recommendation Card */
+        .car-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 5px;
+            width: 250px;
+        }
+
+        .car-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        .car-info {
+            padding: 15px;
+        }
+
+        .car-info h3 {
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .car-info p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .car-info .price {
+            font-weight: bold;
+            color: #e50000;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .car-actions {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+
+        .car-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .car-actions button:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-url {
+            color: #00a884;
+            border-right: 1px solid #eee !important;
+        }
+
+        .btn-skip {
+            color: #e50000;
+        }
+
+        /* Input */
+        .input-area {
+            display: flex;
+            padding: 15px 20px;
+            background: #f0f2f5;
+            align-items: center;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .btn-send {
+            margin-left: 15px;
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: #00a884;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Typing indicator */
+        .typing {
+            font-style: italic;
+            color: #888;
+            font-size: 13px;
+        }
+        
+        /* Debug options for easy testing */
+        .debug-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            font-size: 12px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .debug-panel button {
+            padding: 5px;
+            border: 1px solid #ccc;
+            background: #eee;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Panel for rapid testing -->
+    <div class="debug-panel">
+        <strong>Test Cases</strong>
+        <button onclick="simulateInput('Ngân sách 200 triệu')">Vượt NS (200tr)</button>
+        <button onclick="simulateInput('Có khoảng 500tr')">Borderline (500tr chưa rõ)</button>
+        <button onclick="simulateInput('Mình có 800 triệu đã gồm chi phí lăn bánh')">Khớp rõ ràng (800tr)</button>
+    </div>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">VH</div>
+            <div class="menu">
+                <div class="icon">💬</div>
+                <div class="icon">📞</div>
+                <div class="icon">⚙️</div>
+            </div>
+        </div>
+
+        <!-- Chat list -->
+        <div class="chat-list">
+            <div class="chat-list-header">Đoạn chat</div>
+            <div class="chat-item active">
+                <div class="avatar bot-ava">VA</div>
+                <div class="chat-info">
+                    <div class="name">VinFast Advisor AI</div>
+                    <div class="last-msg" id="last-msg-preview">Xin chào! Tôi có thể...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat window -->
+        <div class="chat-window">
+            <div class="header">
+                <div class="avatar bot-ava">VA</div>
+                <div>
+                    <div class="name">VinFast Advisor AI</div>
+                    <div class="status">Online</div>
+                </div>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="msg-wrapper">
+                    <div class="msg bot">
+                        👋 Xin chào! Tôi là AI VinFast Advisor. Bạn cần tìm xe gì, với ngân sách khoảng bao nhiêu?
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input id="input" placeholder="Nhập tin nhắn..." autocomplete="off" />
+                <button class="btn-send" onclick="handleSend()">➤</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const DOM = {
+            input: document.getElementById('input'),
+            messages: document.getElementById('messages'),
+            lastMsgPreview: document.getElementById('last-msg-preview')
+        };
+
+        // Mock Data
+        const carsData = [
+            { id: 'vf3', name: 'VF 3', price: 302000000, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/VinFast_VF_3_1.jpg/800px-VinFast_VF_3_1.jpg', specs: '4 chỗ' },
+            { id: 'vf5', name: 'VF 5', price: 529000000, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/VinFast_VF_5_Plus.jpg/800px-VinFast_VF_5_Plus.jpg', specs: 'Pin: 37,23 kWh' },
+            { id: 'vf6', name: 'VF 6', price: 689000000, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/2023_VinFast_VF_6.jpg/800px-2023_VinFast_VF_6.jpg', specs: 'Quãng đường: 485 km' },
+            { id: 'vf7', name: 'VF 7', price: 789000000, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/VinFast_VF_7_at_the_2023_LA_Auto_Show.jpg/800px-VinFast_VF_7_at_the_2023_LA_Auto_Show.jpg', specs: 'Bảo hành: 10 năm' },
+            { id: 'vf8', name: 'VF 8', price: 1019000000, img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/VinFast_VF_8_in_Le_Bourget_2.jpg/800px-VinFast_VF_8_in_Le_Bourget_2.jpg', specs: 'Quãng đường: 562 km' }
+        ];
+
+        // State Machine
+        let state = 'AWAITING_BUDGET';
+        let currentBudget = 0;
+
+        // Core Functions
+        function appendMessage(text, sender = 'user', isHtml = false) {
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-wrapper ${sender}`;
+            
+            const msgObj = document.createElement("div");
+            msgObj.className = `msg ${sender}`;
+            
+            if (isHtml) {
+                msgObj.innerHTML = text;
+            } else {
+                msgObj.innerText = text;
+            }
+
+            wrapper.appendChild(msgObj);
+            DOM.messages.appendChild(wrapper);
+            DOM.messages.scrollTop = DOM.messages.scrollHeight;
+
+            if (sender === 'bot') {
+                DOM.lastMsgPreview.innerText = isHtml ? "Đã gửi một thẻ xe" : text;
+            }
+        }
+
+        function showTyping(callback) {
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-wrapper bot typing-wrapper`;
+            wrapper.innerHTML = `<div class="msg bot typing">Đang xử lý...</div>`;
+            DOM.messages.appendChild(wrapper);
+            DOM.messages.scrollTop = DOM.messages.scrollHeight;
+
+            setTimeout(() => {
+                DOM.messages.removeChild(wrapper);
+                callback();
+            }, 600);
+        }
+
+        function simulateInput(text) {
+            DOM.input.value = text;
+            handleSend();
+        }
+
+        function handleSend() {
+            const text = DOM.input.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            DOM.input.value = "";
+            DOM.lastMsgPreview.innerText = text;
+
+            showTyping(() => {
+                processUserIntent(text);
+            });
+        }
+
+        DOM.input.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") handleSend();
+        });
+
+        // ----------------------------------------
+        // MAIN FLOW LOGIC
+        // ----------------------------------------
+        function processUserIntent(text) {
+            const lowerText = text.toLowerCase();
+
+            switch (state) {
+                case 'AWAITING_BUDGET':
+                    let budget = extractBudget(lowerText);
+                    if (budget) {
+                        currentBudget = budget;
+                        // Kiểm tra dữ liệu ngân sách rõ ràng?
+                        let isClear = lowerText.includes('thuế') || lowerText.includes('lăn bánh') || lowerText.includes('pin') || lowerText.includes('đã gồm');
+                        
+                        // Fake clarity for numbers > 1B just to show varying paths
+                        if(budget >= 1000000000) isClear = true; 
+
+                        if (!isClear) {
+                            // Nhánh: Không (Chỉ nhập số) -> Hỏi ngân sách gồm thuế/pin chưa?
+                            appendMessage("Ngân sách " + (budget/1000000) + " triệu ĐÃ bao gồm chi phí Thuế lăn bánh hoặc Pin chưa ạ?", 'bot');
+                            state = 'AWAITING_CLARIFICATION';
+                        } else {
+                            // Nhánh: Rõ ràng -> Truy vấn DB 
+                            executeMatching(currentBudget);
+                        }
+                    } else {
+                        appendMessage("Xin lỗi, tôi chưa nhận diện được mức ngân sách của bạn (VD: 500 triệu). Bạn có thể nói rõ hơn không?", 'bot');
+                    }
+                    break;
+
+                case 'AWAITING_CLARIFICATION':
+                    // Người dùng phản hồi -> Coi như rõ ràng -> Truy vấn DB
+                    if(lowerText.includes('chưa') || lowerText.includes('không')) {
+                        // Trừ bớt ngân sách ảo để tính xe (để phần thuế)
+                        currentBudget -= 50000000; 
+                    }
+                    executeMatching(currentBudget);
+                    break;
+
+                case 'AWAITING_PREFERENCE':
+                    // User chọn Rộng rãi hay Hiệu năng
+                    if (lowerText.includes('rộng') || lowerText.includes('rãi')) {
+                        renderCard(carsData.find(c => c.id === 'vf5')); // Render VF5
+                        state = 'AWAITING_ACTION';
+                    } else if (lowerText.includes('hiệu') || lowerText.includes('năng')) {
+                        renderCard(carsData.find(c => c.id === 'vf6')); // Render VF6
+                        state = 'AWAITING_ACTION';
+                    } else {
+                        appendMessage("Bạn vui lòng chọn ưu tiên **Không gian Rộng rãi** hay **Hiệu năng** ạ?", 'bot');
+                    }
+                    break;
+
+                case 'AWAITING_INSTALLMENT_AGREEMENT':
+                    // User đồng ý trả góp cho dòng cao hơn?
+                    if (lowerText.includes('có') || lowerText.includes('ok') || lowerText.includes('ừ')) {
+                        // Tăng budget ảo lên để khớp xe
+                        currentBudget += 200000000; 
+                        executeMatching(currentBudget);
+                    } else {
+                        appendMessage("Cảm ơn bạn. Nếu bạn đổi ý hoặc muốn tìm xe khác, hãy nhắn tôi nhé!", 'bot');
+                        state = 'AWAITING_BUDGET';
+                    }
+                    break;
+
+                case 'AWAITING_ACTION':
+                    appendMessage("Nếu bạn cần tìm xe mẫu khác, hãy nhập lại mức ngân sách nhé.", 'bot');
+                    state = 'AWAITING_BUDGET';
+                    break;
+                    
+                case 'AWAITING_PHONE_NUMBER':
+                    if (lowerText.match(/\d{8,11}/)) {
+                        appendMessage(`Cảm ơn bạn. Số điện thoại **${text}** đã được ghi nhận. Quá trình xử lý...`, 'bot', true);
+                        
+                        setTimeout(() => {
+                            // Chuyển đổi giao diện sang Tư vấn viên
+                            document.querySelector('.header .name').innerText = "Tư vấn viên Kinh doanh";
+                            if(document.querySelector('.chat-list-header + .chat-item .name')) {
+                                document.querySelector('.chat-list-header + .chat-item .name').innerText = "Tư vấn viên Kinh doanh";
+                            }
+                            document.querySelectorAll('.avatar.bot-ava').forEach(el => {
+                                el.innerText = "TV";
+                                el.style.background = "#1976D2"; // Đổi màu xanh phân biệt
+                            });
+                            
+                            showTyping(() => {
+                                appendMessage(`Dạ xin chào anh/chị, em là tư vấn viên kinh doanh xe VinFast. Em nhận được thông tin mình đang quan tâm mẫu xe **${window.selectedCar}**. Anh/chị cần em hỗ trợ báo giá lăn bánh hay tư vấn cụ thể thông số nào ạ?`, 'bot', true);
+                                state = 'SALES_REP_CHAT';
+                            });
+                        }, 1500);
+
+                    } else {
+                        appendMessage("Số điện thoại không hợp lệ. Vui lòng nhập lại số điện thoại gồm các chữ số (VD: 0912345678) nhé.", 'bot');
+                    }
+                    break;
+
+                case 'SALES_REP_CHAT':
+                    appendMessage("*(Prototype)* Tại đây, tư vấn viên người thật sẽ trực tiếp nhắn tin trao đổi hoặc có thể thực hiện cuộc gọi ngoại tuyến cho khách hàng.", 'bot');
+                    break;
+
+                default:
+                    state = 'AWAITING_BUDGET';
+            }
+        }
+
+        // ----------------------------------------
+        // HELPERS
+        // ----------------------------------------
+        function extractBudget(text) {
+            const matches = text.match(/\d+/g);
+            if (!matches) return null;
+            let num = parseInt(matches[0]);
+            if (text.includes('triệu')) num *= 1000000;
+            else if (text.includes('tỷ')) num *= 1000000000;
+            // if input just "500", assume million
+            else if (num < 10000) num *= 1000000; 
+            return num;
+        }
+
+        function executeMatching(budget) {
+            // Logic khớp DB
+            if (budget < 300000000) {
+                // Nhánh: Vượt Ngân Sách - Không tìm thấy xe
+                appendMessage("Hiện tại tôi chưa tìm thấy dòng xe nào phù hợp với ngân sách của bạn 😔.", 'bot');
+                setTimeout(() => {
+                    appendMessage("Gợi ý: Bạn có muốn xem phương án **Trả góp** cho các dòng xe cao hơn không?", 'bot');
+                    state = 'AWAITING_INSTALLMENT_AGREEMENT';
+                }, 800);
+            } 
+            else if (budget >= 500000000 && budget <= 700000000) {
+                // Nhánh: Borderline (khoảng 2 options)
+                appendMessage("Tôi thấy có vài lựa chọn phù hợp. Điển hình là VF 5 và VF 6.", 'bot');
+                setTimeout(() => {
+                    appendMessage("Bạn ưu tiên **Không gian Rộng rãi** hay **Hiệu năng**?", 'bot');
+                    state = 'AWAITING_PREFERENCE';
+                }, 800);
+            } 
+            else if (budget >= 750000000) {
+                // Nhánh: Khớp > 3 S/x (Confidence > 0.8)
+                appendMessage("Tuyệt vời, tôi đã tìm thấy lựa chọn rất phù hợp với ngân sách của bạn!", 'bot');
+                setTimeout(() => {
+                    renderCard(carsData.find(c => c.id === 'vf7')); // Giả sử gợi ý VF7
+                    state = 'AWAITING_ACTION';
+                }, 500);
+            } 
+            else {
+                // Rơi vào VF3
+                appendMessage("Tôi đã tìm thấy một xe nhỏ gọn phù hợp với bạn!", 'bot');
+                setTimeout(() => {
+                    renderCard(carsData.find(c => c.id === 'vf3'));
+                    state = 'AWAITING_ACTION';
+                }, 500);
+            }
+        }
+
+        function renderCard(car) {
+            // AI Render Recommendation Card
+            const html = `
+                <div class="car-card">
+                    <img src="${car.img}" alt="${car.name}">
+                    <div class="car-info">
+                        <h3>${car.name}</h3>
+                        <div class="price">${car.price.toLocaleString('vi-VN')} VNĐ</div>
+                        <p>Thông số: ${car.specs}</p>
+                    </div>
+                    <div class="car-actions">
+                        <button class="btn-url" onclick="triggerCardAction('url', '${car.name}')">Nhận tư vấn</button>
+                        <button class="btn-skip" onclick="triggerCardAction('skip', '${car.name}')">Bỏ qua</button>
+                    </div>
+                </div>
+            `;
+            appendMessage(html, 'bot', true);
+        }
+
+        // Exposing globally to be invoked from HTML onclick
+        window.triggerCardAction = function(type, carName) {
+            if (type === 'url') {
+                showTyping(() => {
+                    appendMessage(`Bạn đã chọn nhận tư vấn cho dòng xe **${carName}**. Sự lựa chọn tuyệt vời! Vui lòng để lại **Số điện thoại** của bạn để chuyên viên kinh doanh liên hệ và hỗ trợ quy trình mua xe nhé ạ.`, 'bot', true);
+                    window.selectedCar = carName;
+                    state = 'AWAITING_PHONE_NUMBER';
+                });
+            } else if (type === 'skip') {
+                showTyping(() => {
+                    // Log Preference: User Rejected -> Cập nhật Training Signal
+                    appendMessage(`<em>Hệ thống đã nhận phản hồi: Bạn bỏ qua mẫu ${carName} và cập nhật Ranking model.</em> Bạn có muốn xem dòng xe khác không? Xin hãy nhập lại mức ngân sách.`, 'bot', true);
+                    state = 'AWAITING_BUDGET';
+                });
+            }
+        };
+
+    </script>
+</body>
+
+</html>
